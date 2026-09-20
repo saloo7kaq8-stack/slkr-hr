@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SLKR-HR System</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<!-- عناصر مخفية لمنع أخطاء JavaScript -->
+<div id="LICW" style="display:none !important;"><input id="licInput" type="hidden"/><div id="licErr"></div><button id="licBtn" style="display:none;"></button></div>
+<div id="WELW" style="display:none !important;"><div id="welName"></div><div id="welSub"></div><div id="welLogoWrap"></div></div>
+
+
+
+
+<!-- LOGIN -->
+
+<div class="lw" id="LW" style="display:flex !important;">
+  <div class="lw-form-zone">
+  <div class="lb lb-glass">
+    <div class="lb-glass-content">
+      <div style="font-size:40px;margin-bottom:6px;">🏢</div>
+      <div class="lb-lg" id="lbNm">مطابخ العيسى</div>
+      <div class="lb-sb" id="lbTg">الموارد البشرية</div>
+      <input type="text" id="LU" placeholder="اسم المستخدم" autocomplete="off"/>
+      <input type="password" id="LP" placeholder="كلمة المرور"/>
+      <button class="lb-btn" onclick="doLogin()">تسجيل الدخول</button>
+      <div id="LE" style="color:#ff6b6b;font-size:11px;margin-top:8px;min-height:16px;"></div>
+      <div class="lb-kw-forgot" onclick="toast('تواصل مع إدارة الموارد البشرية لإعادة تعيين كلمة المرور')">هل نسيت كلمة المرور؟</div>
+      <div style="color:rgba(230,215,180,.28);font-size:9px;margin-top:12px;" id="lbSN"></div>
+    </div>
+  </div>
+  </div>
+  <div class="lw-image-zone">
+    <img src="kuwait-skyline.jpg" alt="Kuwait skyline"/>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="APP" style="display:none !important;">
+  <nav class="sb">
+    <div class="sb-hd" onclick="openQL()">
+      <img id="sbLI" class="sb-li" src="" alt=""/>
+      <div class="sb-ic" id="sbIC">🏢</div>
+      <div class="sb-nm" id="sbNM">SLKR-HR</div>
+      <div style="color:rgba(255,255,255,.35);font-size:10px;margin-top:2px;" id="sbTG">نظام الموارد البشرية — الكويت</div>
+    </div>
+    <div id="NAVM"></div>
+    <div class="sb-ft">
+      <div style="color:rgba(255,255,255,.3);font-size:10px;">المستخدم الحالي</div>
+      <div style="color:#c8a84b;font-weight:700;font-size:12px;" id="sbUN">—</div>
+      <div style="color:rgba(255,100,100,.6);cursor:pointer;margin-top:4px;font-size:11px;" onclick="doLogout()">🚪 خروج</div>
+    </div>
+  </nav>
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-ttl" id="TBT">لوحة التحكم</div>
+      <input type="text" id="qsInp" placeholder="🔍 بحث سريع..." oninput="quickSearch(this.value)" class="no-print" style="padding:7px 12px;border:1.5px solid #e0d9cc;border-radius:8px;font-family:inherit;font-size:11px;outline:none;width:190px;"/>
+      <div style="display:flex;gap:10px;align-items:center;" class="no-print">
+        <div class="bell" id="bellBtn" onclick="showS('notifications')" title="الإشعارات">🔔<span class="bell-cnt" id="bellCnt">0</span></div>
+        
+      <div class="size-ctrl no-print" title="حجم صور الموظفين">
+        <span style="font-size:11px;color:#888;">🖼️ حجم الصور</span>
+        <input type="range" class="size-slider" id="photoSizeSlider" min="28" max="80" value="36" style="width:90px;"/>
+        <span style="font-size:11px;color:#c8a84b;font-weight:700;min-width:28px;" id="photoSizeVal">36</span>
+      </div>
+        <button class="btn bp bsm" onclick="window.print()">🖨️ طباعة</button>
+        <button class="btn bok bsm" onclick="doRefresh()" style="animation:pulse 2s infinite">🔄 تحديث</button>
+        <span style="font-size:11px;color:#888;" id="TBD"></span>
+      </div>
+    </div>
+    <!-- PAGES -->
+    <div id="pg-dashboard" class="pg act"></div>
+    <div id="pg-search" class="pg"></div>
+    <div id="pg-staff" class="pg"></div>
+    <div id="pg-appointments" class="pg"></div>
+    <div id="pg-org" class="pg"></div>
+    <div id="pg-salaries" class="pg"></div>
+    <div id="pg-overtime" class="pg"></div>
+    <div id="pg-bonuses" class="pg"></div>
+    <div id="pg-endservice" class="pg"></div>
+    <div id="pg-leaves" class="pg"></div>
+    <div id="pg-permissions" class="pg"></div>
+    <div id="pg-attendance" class="pg"></div>
+    <div id="pg-evaluations" class="pg"></div>
+    <div id="pg-evalfiles" class="pg"></div>
+    <div id="pg-selfeval" class="pg"></div>
+    <div id="pg-peereval" class="pg"></div>
+    <div id="pg-approvals" class="pg"></div>
+    <div id="pg-training" class="pg"></div>
+    <div id="pg-promotions" class="pg"></div>
+    <div id="pg-warnings" class="pg"></div>
+    <div id="pg-notifications" class="pg"></div>
+    <div id="pg-files" class="pg"></div>
+    <div id="pg-reports" class="pg"></div>
+    <div id="pg-locations" class="pg"></div>
+    <div id="pg-auditlog" class="pg"></div>
+    <div id="pg-backup" class="pg"></div>
+    <div id="pg-licenseinfo" class="pg"></div>
+    <div id="pg-users" class="pg"></div>
+    <div id="pg-wps" class="pg"></div>
+    <div id="pg-payslip" class="pg"></div>
+    <div id="pg-onboarding" class="pg"></div>
+    <div id="pg-holidays" class="pg"></div>
+    <div id="pg-analytics" class="pg"></div>
+    <div id="pg-kpi" class="pg"></div>
+    <div id="pg-alerts" class="pg"></div>
+    <div id="pg-settings" class="pg"></div>
+  </div>
+</div>
+<div class="toast" id="TOAST"></div>
+<div id="OVS"></div><!-- overlays container -->
+
+<script src="app.js"></script>
+
+</body>
+</html>
