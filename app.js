@@ -220,7 +220,7 @@ function applyBrand(){
   $('sbTG').textContent=s.tagline||'نظام الموارد البشرية';
   $('lbNm').textContent=s.companyName||'SLKR-HR';
   if($('lbTg'))$('lbTg').textContent=s.tagline||'الموارد البشرية';
-  document.title=(s.companyName||'SLKR-HR')+' System';
+  document.title=(s.companyName||'مطابخ العيسى')+' - '+(s.tagline||'الموارد البشرية');
   var sbHd=$('sbHd');
   if(s.logo){
     // شعار الشريط الجانبي — كبير ومتوسط فوق الاسم
