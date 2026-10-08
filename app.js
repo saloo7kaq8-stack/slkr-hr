@@ -71,6 +71,7 @@ const DEFEMPS=[
   {id:18,empNo:'A-106',name:'عماد رضوان',title:'عامل مصنع الألمنيوم',dept:'مصنع الألمنيوم العيسى',grade:'الدرجة الخامسة',contract:'دوام كامل',hire:'',start:'',status:'نشط',salary:0,housing:0,transport:0,other:0,deductions:0,phone:'',email:'',nationality:'',manager:'',bankname:'',bank:'',photo:'',docs:[],company:'دار العيسى'},
 ];
 const DEFDEPTS=[{id:1,name:'الإدارة العامة',manager:'عيسى عبدالله العيسى'},{id:2,name:'المبيعات',manager:'محمود ابو مسلم عبدالستار'},{id:3,name:'مصنع مطابخ العيسى',manager:'بشار دياب عيسى'},{id:4,name:'تركيبات مطابخ العيسى',manager:'وليد السيد احمد'},{id:5,name:'مصنع الألمنيوم العيسى',manager:''},{id:6,name:'الموارد البشرية',manager:'صالح صقر الجاسم'},{id:7,name:'المالية',manager:''}];
+const DEFCOS=[{id:'c1',name:'مطابخ العيسى',icon:'🍳',color:'#1a7a4c'},{id:'c2',name:'ألمنيوم العيسى',icon:'🪟',color:'#1e5fa8'}];
 const DEFUSERS=[
   {id:1,name:'عيسى عبدالله العيسى',username:'admin',password:'admin123',role:'مدير عام',status:'نشط',lastLogin:''},
   {id:2,name:'صالح صقر الجاسم',username:'vp',password:'vp123',role:'نائب مدير عام',status:'نشط',lastLogin:''},
@@ -93,7 +94,7 @@ var KWT_H=[
   {d:'2025-09-25',n:'المولد النبوي الشريف',t:'ديني'}
 ];
 function seedHolidays(){return cp(KWT_H).map(function(h,i){h.id=h.id||('seed-'+i);return h;});}
-function defDB(){return{serial:'MH-'+rnd(4)+'-'+rnd(4),settings:{companyName:'مطابخ العيسى',tagline:'الموارد البشرية',logo:LOGO_DATA_URI},users:cp(DEFUSERS),departments:cp(DEFDEPTS),employees:cp([...DEFMGRS.map(m=>({...m,isMgr:true})),...DEFEMPS]),leaves:[],evaluations:[],selfEvals:[],peerEvals:[],bonuses:[],training:[],promotions:[],warnings:[],approvals:[],attendance:[],appointments:[],overtime:[],permissions:[],notifications:[],evalFiles:[],reportFiles:[],generalFiles:[],locations:[{id:1,name:'المقر الرئيسي',address:'الكويت – المنطقة الصناعية',type:'مقر رئيسي'}],endServices:[],onboarding:[],auditLog:[],hrActions:[],holidays:seedHolidays(),candidates:[]};}
+function defDB(){return{serial:'MH-'+rnd(4)+'-'+rnd(4),settings:{companyName:'مطابخ العيسى',tagline:'الموارد البشرية',logo:LOGO_DATA_URI},users:cp(DEFUSERS),departments:cp(DEFDEPTS),companies:cp(DEFCOS),employees:cp([...DEFMGRS.map(m=>({...m,isMgr:true})),...DEFEMPS]),leaves:[],evaluations:[],selfEvals:[],peerEvals:[],bonuses:[],training:[],promotions:[],warnings:[],approvals:[],attendance:[],appointments:[],overtime:[],permissions:[],notifications:[],evalFiles:[],reportFiles:[],generalFiles:[],locations:[{id:1,name:'المقر الرئيسي',address:'الكويت – المنطقة الصناعية',type:'مقر رئيسي'}],endServices:[],onboarding:[],auditLog:[],hrActions:[],holidays:seedHolidays(),candidates:[]};}
 var ONBOARD_STEPS=['استلام الهوية والأوراق الثبوتية','فتح الملف الوظيفي في النظام','التسجيل في نظام الرواتب','ربط الحساب البنكي IBAN','اصدار بطاقة الدوام','جلسة التعريف بالشركة وسياساتها','تسليم العقد الرسمي الموقع','تفعيل صلاحيات النظام','التعريف بالزملاء والمشرف المباشر','متابعة فترة التجربة 100 يوم'];
 var APT_STAGES=['طلب توظيف','شاغر','مرشح','مقابلة عمل','قبول مبدئي','عرض وظيفي','تعيين'];
 var DOC_CATS=['الإقامة','جواز السفر','البطاقة المدنية','عقد العمل','الشهادة الصحية','رخصة العمل','شهادات ومؤهلات','أخرى'];
@@ -103,6 +104,7 @@ function rnd(n){return Math.random().toString(36).substr(2,n).toUpperCase();}
 function cp(x){return JSON.parse(JSON.stringify(x));}
 
 let DB,CU,curS='dashboard',evalSC={},evalREC='';
+let _staffCo='all';
 // EDIT CONTEXT — store edit info globally to avoid onclick JSON
 let EC={isMgr:false,id:null,photoData:'',docs:[]};
 
@@ -119,6 +121,17 @@ function migrateDB(){
   if(DB&&!DB.holidays){DB.holidays=seedHolidays();saveDB();}
   if(DB&&!DB.candidates){DB.candidates=[];saveDB();}
   if(DB&&DB.settings&&!DB.settings.logo){DB.settings.logo=LOGO_DATA_URI;saveDB();}
+  if(DB&&!DB.companies){DB.companies=cp(DEFCOS);saveDB();}
+  if(DB&&DB.employees&&DB.employees.length){
+    var coChanged=false;
+    DB.employees.forEach(function(e){
+      if(!e.companyId){
+        e.companyId=(e.dept==='مصنع الألمنيوم العيسى')?'c2':'c1';
+        coChanged=true;
+      }
+    });
+    if(coChanged)saveDB();
+  }
   // توحيد "المدراء" و"الموظفون" في قاعدة بيانات واحدة مصنّفة (إدارة عليا / موظفون / عمال)
   if(DB&&DB.employees&&DB.employees.length){
     var changed=false;
@@ -167,6 +180,9 @@ function empOpts(ph='-- اختر --'){
   return`<option value="">${ph}</option>`+mo+eo;
 }
 function deptOpts(sel){return`<option value="">-- اختر القسم --</option>`+(DB.departments||[]).map(d=>`<option value="${esc(d.name)}" ${d.name===sel?'selected':''}>${esc(d.name)}</option>`).join('');}
+function empCompany(e){return e&&e.companyId||(DB.companies&&DB.companies[0]?DB.companies[0].id:'c1');}
+function companyMeta(id){const c=(DB.companies||[]).find(x=>x.id===id);return c||{id:id,name:'غير محدد',icon:'🏢',color:'#8a8a8a'};}
+function companyOpts(sel){return(DB.companies||[]).map(c=>`<option value="${esc(c.id)}" ${c.id===sel?'selected':''}>${c.icon||'🏢'} ${esc(c.name)}</option>`).join('');}
 function natOpts(sel){
   var list=['كويتي','مصر','الهند','باكستان','بنغلاديش','الفلبين','سريلانكا','نيبال','سوريا','لبنان','الأردن','السودان'];
   if(sel&&list.indexOf(sel)===-1)list.push(sel);
@@ -264,10 +280,12 @@ function showS(s){
    PERSON FORM — used for managers & employees
    Uses EC (edit context) to avoid onclick JSON
 ═══════════════════════════════════════════ */
-function openPersonForm(category, personId){
+function openPersonForm(category, personId, companyId){
   const arr=DB.employees||[];
   const d=personId?arr.find(e=>e.id===personId):null;
   category=d?(d.category||(d.isMgr?'إدارة عليا':'موظف')):(category||'موظف');
+  const defCoId=(DB.companies&&DB.companies[0])?DB.companies[0].id:'c1';
+  const curCoId=d?empCompany(d):(companyId||defCoId);
   EC.isMgr=category==='إدارة عليا'; EC.id=personId;
   EC.photoData=d?.photo||'';
   EC.docs=cp(d?.docs||[]);
@@ -291,6 +309,7 @@ function openPersonForm(category, personId){
         <input type="file" id="pfPhotoInp" accept="image/*" style="display:none;"/>
       </div>
       <div class="fgr" style="flex:1;">
+        <div class="fg"><label>الشركة *</label><select id="pf-co">${companyOpts(curCoId)}</select></div>
         <div class="fg"><label>الاسم بالعربي *</label><input id="pf-name" value="${esc(d?.name||'')}"/></div>
         <div class="fg"><label>الاسم بالإنجليزي</label><input id="pf-nameEn" value="${esc(d?.nameEn||'')}"/></div>
         <div class="fg"><label>الرقم الوظيفي</label><input id="pf-eno" value="${esc(d?.empNo||'')}"/></div>
@@ -414,7 +433,7 @@ function renderPFDocs(){const el=$('pfDocsList');if(!el)return;el.innerHTML=EC.d
 function savePF(){
   const name=gv('pf-name');if(!name){toast('أدخل الاسم الكامل','err');return;}
   const category=$('pf-cat')?.value||'موظف';
-  const obj={id:EC.id||Date.now(),category,isMgr:category==='إدارة عليا',name,nameEn:gv('pf-nameEn'),empNo:gv('pf-eno'),idNum:gv('pf-idn'),nationality:gv('pf-nat'),gender:$('pf-gnd')?.value||'ذكر',birth:$('pf-bth')?.value||'',phone:gv('pf-phn'),email:gv('pf-eml'),marital:$('pf-mar')?.value||'أعزب',dept:$('pf-dpt')?.value||'',title:gv('pf-ttl'),grade:$('pf-grd')?.value||'الدرجة الأولى',contract:$('pf-con')?.value||'دوام كامل',hire:$('pf-hir')?.value||'',start:$('pf-str')?.value||'',manager:gv('pf-mgr'),status:$('pf-sts')?.value||'نشط',jobType:$('pf-jtype')?.value||'إداري',salary:parseFloat($('pf-sal')?.value)||0,housing:parseFloat($('pf-hse')?.value)||0,transport:parseFloat($('pf-trn')?.value)||0,other:parseFloat($('pf-oth')?.value)||0,phoneAllowance:parseFloat($('pf-phn-al')?.value)||0,deductions:parseFloat($('pf-ded')?.value)||0,bankname:gv('pf-bnk'),bank:gv('pf-ibn'),photo:EC.photoData,docs:[...EC.docs]};
+  const obj={id:EC.id||Date.now(),companyId:$('pf-co')?.value||(DB.companies&&DB.companies[0]?DB.companies[0].id:'c1'),category,isMgr:category==='إدارة عليا',name,nameEn:gv('pf-nameEn'),empNo:gv('pf-eno'),idNum:gv('pf-idn'),nationality:gv('pf-nat'),gender:$('pf-gnd')?.value||'ذكر',birth:$('pf-bth')?.value||'',phone:gv('pf-phn'),email:gv('pf-eml'),marital:$('pf-mar')?.value||'أعزب',dept:$('pf-dpt')?.value||'',title:gv('pf-ttl'),grade:$('pf-grd')?.value||'الدرجة الأولى',contract:$('pf-con')?.value||'دوام كامل',hire:$('pf-hir')?.value||'',start:$('pf-str')?.value||'',manager:gv('pf-mgr'),status:$('pf-sts')?.value||'نشط',jobType:$('pf-jtype')?.value||'إداري',salary:parseFloat($('pf-sal')?.value)||0,housing:parseFloat($('pf-hse')?.value)||0,transport:parseFloat($('pf-trn')?.value)||0,other:parseFloat($('pf-oth')?.value)||0,phoneAllowance:parseFloat($('pf-phn-al')?.value)||0,deductions:parseFloat($('pf-ded')?.value)||0,bankname:gv('pf-bnk'),bank:gv('pf-ibn'),photo:EC.photoData,docs:[...EC.docs]};
   if(!DB.employees)DB.employees=[];
   const i=DB.employees.findIndex(e=>e.id===EC.id);
   if(EC.id&&i>-1)DB.employees[i]=obj;else DB.employees.push(obj);
@@ -428,7 +447,7 @@ function viewP(id){
   const e=(DB.employees||[]).find(x=>x.id===id);if(!e)return;
   const isMgr=!!e.isMgr;
   const net=ns(e);
-  const rows=[['رقم وظيفي',e.empNo],['الجوال',e.phone],['البريد',e.email],['الهوية',e.idNum],['الجنسية',e.nationality],['تاريخ الميلاد',fd(e.birth)],['القسم',e.dept],['الدرجة',e.grade],['العقد',e.contract],['تاريخ التعيين',fd(e.hire)],['تاريخ المباشرة',fd(e.start)],['المشرف',e.manager],['الراتب الأساسي',KD(e.salary)],['بدل السكن',KD(e.housing)],['بدل النقل',KD(e.transport)],['الراتب الصافي',KD(net)],['البنك',e.bankname]];
+  const rows=[['الشركة',companyMeta(empCompany(e)).name],['رقم وظيفي',e.empNo],['الجوال',e.phone],['البريد',e.email],['الهوية',e.idNum],['الجنسية',e.nationality],['تاريخ الميلاد',fd(e.birth)],['القسم',e.dept],['الدرجة',e.grade],['العقد',e.contract],['تاريخ التعيين',fd(e.hire)],['تاريخ المباشرة',fd(e.start)],['المشرف',e.manager],['الراتب الأساسي',KD(e.salary)],['بدل السكن',KD(e.housing)],['بدل النقل',KD(e.transport)],['الراتب الصافي',KD(net)],['البنك',e.bankname]];
   const docs=(e.docs||[]).map(f=>`<div class="fi"><span style="font-size:18px;">${fi(f.name)}</span><div style="flex:1;font-size:11px;"><strong>${esc(f.name)}</strong>${f.category?`<br/><span style="color:#888;">${esc(f.category)}</span>`:''}</div>${docExpBadge(f.expiry)}<button class="btn bi bsm" onclick="dlF('${esc(f.data)}','${esc(f.name)}')">⬇️</button></div>`).join('');
   mkOpOv('VP',`👤 ${esc(e.name)}`,`
   <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;">
@@ -709,30 +728,51 @@ function setCatFilter(cat){
   sel.value=(sel.value===cat)?'':cat;
   filterE();
 }
+function switchStaffCo(id){_staffCo=id;pgStaff();}
 function pgStaff(){
-  const all=allP();
-  const total=all.length;
-  const mgrN=all.filter(e=>empCat(e)==='إدارة عليا').length;
-  const empN=all.filter(e=>empCat(e)==='موظف').length;
-  const wrkN=all.filter(e=>empCat(e)==='عامل').length;
-  const activeN=all.filter(e=>e.status==='نشط').length;
+  const cos=DB.companies||[];
+  const allEmps=allP();
+  const total=allEmps.length;
+  const coCounts={};
+  cos.forEach(c=>{coCounts[c.id]=allEmps.filter(e=>empCompany(e)===c.id).length;});
+  if(_staffCo!=='all'&&!cos.some(c=>c.id===_staffCo))_staffCo='all';
+  const activeCo=_staffCo==='all'?null:cos.find(c=>c.id===_staffCo);
+  const scope=activeCo?allEmps.filter(e=>empCompany(e)===activeCo.id):allEmps;
+  const mgrN=scope.filter(e=>empCat(e)==='إدارة عليا').length;
+  const empN=scope.filter(e=>empCat(e)==='موظف').length;
+  const wrkN=scope.filter(e=>empCat(e)==='عامل').length;
+  const activeN=scope.filter(e=>e.status==='نشط').length;
+  const scopeDepts=Array.from(new Set(scope.map(e=>e.dept||'بدون قسم'))).sort((a,b)=>a.localeCompare(b,'ar'));
+  const addCoId=activeCo?activeCo.id:(cos[0]?cos[0].id:'c1');
+  const coTabs=`<div class="co-tabs no-print">
+    <div class="co-tab ${_staffCo==='all'?'act':''}" style="--co-accent:#1a1a2e;" onclick="switchStaffCo('all')">
+      <span class="co-ic">🏢</span><span>كل الشركات</span><span class="co-cnt">${total}</span>
+    </div>
+    ${cos.map(c=>`<div class="co-tab ${_staffCo===c.id?'act':''}" style="--co-accent:${c.color||'#c8a84b'};" onclick="switchStaffCo('${c.id}')">
+      <span class="co-ic">${c.icon||'🏢'}</span><span>${esc(c.name)}</span><span class="co-cnt">${coCounts[c.id]||0}</span>
+    </div>`).join('')}
+    <div class="co-tab co-tab-mgr" onclick="openCoMgr()" title="إضافة أو تعديل الشركات">
+      <span class="co-ic">⚙️</span><span>إدارة الشركات</span>
+    </div>
+  </div>`;
   $('pg-staff').innerHTML=`
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;" class="no-print">
     <div style="display:flex;align-items:center;gap:12px;">
       <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px rgba(26,26,46,.25);flex-shrink:0;">👥</div>
       <div>
         <div style="font-size:17px;font-weight:900;color:var(--tx);">الإدارة والموظفون</div>
-        <div style="font-size:11px;color:var(--tx3);font-weight:600;">قاعدة بيانات موحدة لجميع منتسبي الشركة — الإدارة العليا، الموظفون، والعمال</div>
+        <div style="font-size:11px;color:var(--tx3);font-weight:600;">${activeCo?'عرض موظفي شركة '+esc(activeCo.name)+' فقط':'قاعدة بيانات موحدة لجميع الشركات والمنتسبين'}</div>
       </div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
-      <button class="btn bp bsm" onclick="openPersonForm('إدارة عليا',null)">➕ إدارة عليا</button>
-      <button class="btn bi bsm" onclick="openPersonForm('موظف',null)">➕ موظف</button>
-      <button class="btn bou bsm" onclick="openPersonForm('عامل',null)">➕ عامل</button>
+      <button class="btn bp bsm" onclick="openPersonForm('إدارة عليا',null,'${addCoId}')">➕ إدارة عليا</button>
+      <button class="btn bi bsm" onclick="openPersonForm('موظف',null,'${addCoId}')">➕ موظف</button>
+      <button class="btn bou bsm" onclick="openPersonForm('عامل',null,'${addCoId}')">➕ عامل</button>
     </div>
   </div>
+  ${coTabs}
   <div class="sg" style="margin-bottom:16px;">
-    <div class="sc" style="cursor:default;"><div class="sc-i">👥</div><div class="sc-v">${total}</div><div class="sc-l">إجمالي المنتسبين</div></div>
+    <div class="sc" style="cursor:default;"><div class="sc-i">👥</div><div class="sc-v">${scope.length}</div><div class="sc-l">إجمالي المنتسبين</div></div>
     <div class="sc" onclick="setCatFilter('إدارة عليا')" title="عرض الإدارة العليا فقط"><div class="sc-i">👔</div><div class="sc-v">${mgrN}</div><div class="sc-l">الإدارة العليا</div></div>
     <div class="sc" onclick="setCatFilter('موظف')" title="عرض الموظفين فقط"><div class="sc-i">🧑‍💼</div><div class="sc-v">${empN}</div><div class="sc-l">الموظفون</div></div>
     <div class="sc" onclick="setCatFilter('عامل')" title="عرض العمال فقط"><div class="sc-i">👷</div><div class="sc-v">${wrkN}</div><div class="sc-l">العمال</div></div>
@@ -755,18 +795,79 @@ function pgStaff(){
         <label style="display:block;font-size:10.5px;font-weight:700;color:var(--tx3);margin-bottom:5px;">القسم</label>
         <select id="ED" style="width:100%;padding:9px 12px;border:1.5px solid #e0d9cc;border-radius:8px;font-family:inherit;font-size:12.5px;outline:none;background:#fff;box-sizing:border-box;" onchange="filterE()">
           <option value="">كل الأقسام</option>
-          ${(DB.departments||[]).map(d=>`<option value="${esc(d.name)}">${esc(d.name)}</option>`).join('')}
+          ${scopeDepts.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join('')}
         </select>
       </div>
       <button class="btn bgr bsm" onclick="$('ES').value='';$('ECAT').value='';$('ED').value='';filterE();">↺ إعادة تعيين</button>
     </div>
   </div>
   <div id="ETBL" style="margin-top:18px;">
-    ${renderStaffCat('إدارة عليا')}
-    ${renderStaffCat('موظف')}
-    ${renderStaffCat('عامل')}
+    ${activeCo?
+      ['إدارة عليا','موظف','عامل'].map(cat=>renderStaffCat(cat,activeCo.id)).join('')
+      :cos.map(c=>renderCompanyBlock(c)).join('')+(cos.length?'':`<div class="card"><p style="color:#999;text-align:center;padding:20px;">لا توجد شركات بعد — استخدم "⚙️ إدارة الشركات" لإضافة أول شركة</p></div>`)
+    }
   </div>`;
   filterE();
+}
+function renderCompanyBlock(c){
+  const list=allP().filter(e=>empCompany(e)===c.id);
+  return `<div class="co-block" style="margin-bottom:30px;">
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:14px;background:linear-gradient(135deg,#1a1a2e,#16213e);margin-bottom:14px;box-shadow:0 6px 18px rgba(0,0,0,.12);border-right:5px solid ${c.color||'#c8a84b'};">
+      <div style="width:40px;height:40px;border-radius:10px;background:${c.color||'#c8a84b'};display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;">${c.icon||'🏢'}</div>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:900;color:#fff;">${esc(c.name)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.65);font-weight:600;">${list.length} ${list.length===1?'موظف':'موظفين'}</div>
+      </div>
+      <button class="btn bsm no-print" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);" onclick="switchStaffCo('${c.id}')">عرض الشركة فقط ←</button>
+    </div>
+    ${['إدارة عليا','موظف','عامل'].map(cat=>renderStaffCat(cat,c.id)).join('')}
+  </div>`;
+}
+function openCoMgr(){mkOpOv('COMGR','⚙️ إدارة الشركات',renderCoMgrBody(),'540px');}
+function renderCoMgrBody(){
+  const cos=DB.companies||[];
+  return `
+  <div class="info-box">🏢 أضف شركاتك هنا، ثم اختر الشركة عند إضافة كل موظف — كل شركة تظهر بتبويبها الخاص في صفحة الإدارة والموظفين.</div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin:12px 0;">
+    ${cos.length?cos.map(c=>{
+      const n=allP().filter(e=>empCompany(e)===c.id).length;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f6f0;border-radius:10px;">
+        <span style="font-size:18px;">${c.icon||'🏢'}</span>
+        <input value="${esc(c.name)}" style="flex:1;padding:6px 10px;border:1px solid #e0d9cc;border-radius:7px;font-family:inherit;font-size:12px;" onchange="renameCompany('${c.id}',this.value)"/>
+        <span class="badge bgr2">${n} موظف</span>
+        <button class="btn bdn bsm" onclick="deleteCompany('${c.id}')" title="حذف الشركة">🗑️</button>
+      </div>`;
+    }).join(''):'<p style="color:#999;text-align:center;padding:10px;">لا توجد شركات بعد</p>'}
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <input id="newCoIcon" placeholder="🏢" maxlength="2" style="width:52px;padding:8px 10px;border:1.5px solid #e0d9cc;border-radius:8px;font-family:inherit;font-size:14px;text-align:center;"/>
+    <input id="newCoName" placeholder="اسم الشركة الجديدة..." style="flex:1;padding:8px 10px;border:1.5px solid #e0d9cc;border-radius:8px;font-family:inherit;font-size:12.5px;"/>
+    <button class="btn bp bsm" onclick="addCompany()">➕ إضافة</button>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-top:16px;"><button class="btn bou" onclick="clOv('COMGR')">إغلاق</button></div>`;
+}
+function refreshCoMgr(){const b=$('COMGRB');if(b)b.innerHTML=renderCoMgrBody();pgStaff();}
+function addCompany(){
+  const name=gv('newCoName');if(!name){toast('أدخل اسم الشركة','err');return;}
+  const icon=gv('newCoIcon')||'🏢';
+  if(!DB.companies)DB.companies=[];
+  const id='c'+Date.now();
+  DB.companies.push({id,name,icon,color:'#'+(Math.floor(Math.random()*0xcccccc)+0x222222).toString(16)});
+  logAction('إضافة شركة جديدة',name);
+  saveDB();refreshCoMgr();toast('✅ تمت إضافة "'+name+'" — جاهزة لإدخال الموظفين');
+}
+function renameCompany(id,name){
+  const c=(DB.companies||[]).find(x=>x.id===id);if(!c)return;
+  name=(name||'').trim();if(!name){toast('اسم الشركة مطلوب','err');return;}
+  c.name=name;saveDB();refreshCoMgr();toast('✅ تم تحديث اسم الشركة');
+}
+function deleteCompany(id){
+  const n=allP().filter(e=>empCompany(e)===id).length;
+  if(n>0){toast('⚠️ لا يمكن حذف شركة فيها '+n+' موظف — انقل الموظفين لشركة أخرى أولاً من ملف كل موظف','err');return;}
+  if(!confirm('حذف هذه الشركة نهائياً؟'))return;
+  DB.companies=(DB.companies||[]).filter(c=>c.id!==id);
+  if(_staffCo===id)_staffCo='all';
+  saveDB();refreshCoMgr();toast('تم حذف الشركة');
 }
 function empCat(e){return e.category||(e.isMgr?'إدارة عليا':'موظف');}
 function rowE(e){
@@ -788,9 +889,10 @@ function rowE(e){
     <td class="no-print" style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn bi bsm" onclick="viewP(${e.id})" title="عرض الملف">👁️</button><button class="btn bwn bsm" onclick="openPersonForm('${esc(cat)}',${e.id})" title="تعديل">✏️</button><button class="btn bdn bsm" onclick="delP(${e.id})" title="حذف">🗑️</button></td>
   </tr>`;
 }
-function renderStaffCat(cat){
+function renderStaffCat(cat,companyId){
   const meta=catMeta(cat);
-  const list=(DB.employees||[]).filter(e=>empCat(e)===cat);
+  let list=(DB.employees||[]).filter(e=>empCat(e)===cat);
+  if(companyId)list=list.filter(e=>empCompany(e)===companyId);
   const order=(DB.departments||[]).map(d=>d.name);
   const groups=[];
   const seen={};
@@ -932,7 +1034,7 @@ function rejectCandidate(id){
 function hireCandidate(id){
   const c=(DB.candidates||[]).find(x=>x.id===id);if(!c)return;
   if(!confirm('سيتم إنشاء ملف موظف جديد لـ "'+c.name+'" وبدء إجراءات الاستقبال. متابعة؟'))return;
-  const emp={id:Date.now(),category:'موظف',isMgr:false,name:c.name,empNo:'',idNum:'',nationality:'',birth:'',phone:c.phone||'',email:c.email||'',marital:'أعزب',dept:c.dept||'',title:c.position||'',grade:'الدرجة الأولى',contract:'دوام كامل',hire:td(),start:'',manager:c.requestedBy||'',status:'نشط',salary:0,housing:0,transport:0,other:0,deductions:0,bankname:'',bank:'',photo:'',docs:[]};
+  const emp={id:Date.now(),companyId:c.companyId||(DB.companies&&DB.companies[0]?DB.companies[0].id:'c1'),category:'موظف',isMgr:false,name:c.name,empNo:'',idNum:'',nationality:'',birth:'',phone:c.phone||'',email:c.email||'',marital:'أعزب',dept:c.dept||'',title:c.position||'',grade:'الدرجة الأولى',contract:'دوام كامل',hire:td(),start:'',manager:c.requestedBy||'',status:'نشط',salary:0,housing:0,transport:0,other:0,deductions:0,bankname:'',bank:'',photo:'',docs:[]};
   if(!DB.employees)DB.employees=[];
   DB.employees.push(emp);
   c.hired=true;c.empId=emp.id;

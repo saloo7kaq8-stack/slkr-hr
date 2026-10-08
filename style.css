@@ -452,6 +452,15 @@ body{
 /* ═══════════════════════════════════════════════════════
    📦 CARDS — GLASS STYLE
 ═══════════════════════════════════════════════════════ */
+.co-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.co-tab{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;background:#fff;border:1.5px solid var(--lt2);cursor:pointer;transition:all .2s;font-weight:700;font-size:12.5px;color:var(--tx2);box-shadow:0 1px 3px rgba(0,0,0,.04);user-select:none;}
+.co-tab:hover{border-color:var(--co-accent,#c8a84b);transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.08);}
+.co-tab.act{background:var(--co-accent,#1a1a2e);color:#fff;border-color:var(--co-accent,#1a1a2e);box-shadow:0 6px 16px rgba(0,0,0,.18);}
+.co-tab .co-ic{font-size:16px;}
+.co-tab .co-cnt{background:rgba(0,0,0,.08);padding:2px 9px;border-radius:10px;font-size:11px;font-weight:800;}
+.co-tab.act .co-cnt{background:rgba(255,255,255,.25);}
+.co-tab-mgr{background:transparent;border-style:dashed;color:var(--tx3);}
+.co-tab-mgr:hover{color:var(--tx);}
 .sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:16px;margin-bottom:20px;}
 .sc{
   background:#fff;border-radius:var(--r2);padding:22px 20px;
